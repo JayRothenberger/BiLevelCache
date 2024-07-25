@@ -12,12 +12,12 @@ A two level cache for machine learning model training and parallel distributed d
 
 ## Table of Contents
 - [Installation](#installation)
-- [Basic Usage](#usage)
+- [Usage](#usage)
+    + [Caching](#caching-datasets)
 - [Features](#features)
 - [License](#license)
 
 ## Installation 
-[def]: #installation
 First, clone this repository
 
 `git clone https://github.com/JayRothenberger/BiLevelCache`
@@ -26,9 +26,9 @@ Then, install the package in the `bicache` directory with pip
 
 `pip install ./BiLevelCache/bicache`
 
-## Basic Usage
-[def]: #usage
+## Usage
 
+### Caching Datasets
 ```python 
 import torchvision
 from bicache import BiLevelCachedDataset
