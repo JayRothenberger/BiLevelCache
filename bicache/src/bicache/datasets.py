@@ -147,8 +147,8 @@ class LazyShardDataset:
 class BiLevelCachedDataset:
     def __init__(self, ds, memory_cache_size=None, disk_cache_size=None, disk_cache_path="./lmdbm.db"):
         self.ds = ds
-        self.ssd_cache = DiskStoreCache(ds, disk_cache_size, disk_cache_path, memory_cache_size > 0)
-        self.memory_cache = RAMStoreCache(self.ssd_cache, memory_cache_size)
+        self.ssd_cache = DiskStoreCache(ds, disk_cache_size, disk_cache_path, memory_cache_size > 0) if disk_cache_size > 0 else self.ds
+        self.memory_cache = RAMStoreCache(self.ssd_cache, memory_cache_size) if memory_cache_size > 0 else self.ssd_cache
 
     def __len__(self):
         return len(self.ds)
