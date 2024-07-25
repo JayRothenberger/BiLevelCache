@@ -29,17 +29,20 @@ Then, install the package in the `bicache` directory with pip
 ## Basic Usage
 [def]: #usage
 
-```
+```python 
+import torchvision
+from bicache import BiLevelCachedDataset
 # path where the disk cache will be stored
 path = '/local/cache'
 
 # the data we will be caching
 data = torchvision.datasets.ImageNet('/somewhere/on/distributed/filesystem')
 
-# Building the object that will handle the caching.  
-# Examples are cached when accessed
-# When the cache would exceed memory_cache_size bytes in RAM the element is evicted to disk.  
-# When both are full, elements become uncached in LRU order.
+"""
+Examples are cached when accessed.  When the cache would exceed memory_cache_size bytes in RAM the element is evicted to disk.  When both are full, elements become uncached in LRU order.
+
+Cache sizes are in bytes.
+"""
 cached_dataset = BiLevelCachedDataset(
                         data, 
                         memory_cache_size=100_000_000_000, 
@@ -47,7 +50,7 @@ cached_dataset = BiLevelCachedDataset(
                         disk_cache_path=path
                         )
 
-# This is an indexed dataset that can be used like any other in pytorch with a dataloader
+# This is a dataset that can be used like any other in pytorch with a dataloader.
 # We can even use multiple workers.  The cache is thread-safe.
 loader_kwargs = {'batch_size': 4, 
                     'num_workers': 2, 
