@@ -53,13 +53,14 @@ class DiskStoreCache(Store):
 
     """
 
-    def __init__(self, store, max_size: int, path="lmdbm.db"):
+    def __init__(self, store, max_size: int, path="lmdbm.db", has_l1=False):
         self._store = store
         self._max_size = max_size
         self._keys_cache = OrderedDict()
         self._contains_cache: Dict[Any, Any] = {}
         self._listdir_cache: Dict[Path, Any] = dict()
         self.hits = self.misses = 0
+        self.has_l1 = has_l1
 
         single_item = self._store[0]
         self.buffer_size = buffer_size(single_item)
@@ -154,8 +155,13 @@ class DiskStoreCache(Store):
             value = self._db[key]
             # cache hit if no KeyError is raised
             self.hits += 1
-            # treat the end as most recently used
-            self._keys_cache.move_to_end(key)
+
+            if self.has_l1:
+                # treat the end as least recently used (it is promoted)
+                self._keys_cache.move_to_end(key, False)
+            else:
+                # treat the end as most recently used (it is not promoted)
+                self._keys_cache.move_to_end(key)
 
         except KeyError as e:
             # cache miss, retrieve value from the store

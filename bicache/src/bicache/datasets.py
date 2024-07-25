@@ -117,11 +117,11 @@ class LazyShardDataset:
 
         if mode == 'rank':
             # a dataset for bi-level partition caching (each rank gets a partition)
-            self.ssd_cache = DiskStoreCache(self.rank_ds, self.disk_size, self.cache_path) if self.disk_size > 0 else self.ds
+            self.ssd_cache = DiskStoreCache(self.rank_ds, self.disk_size, self.cache_path, self.memory_size > 0) if self.disk_size > 0 else self.ds
             self.cache = RAMStoreCache(self.ssd_cache, self.memory_size) if self.memory_size > 0 else self.ssd_cache
         elif mode == 'node':
             # a dataset for bi-level unpartitioned caching (each machine gets a partition, ram caches are a free-for-all)
-            self.ssd_cache = DiskStoreCache(self.rank_ds, self.disk_size, self.cache_path) if self.disk_size > 0 else self.ds
+            self.ssd_cache = DiskStoreCache(self.rank_ds, self.disk_size, self.cache_path, self.memory_size > 0) if self.disk_size > 0 else self.ds
             self.cache = RAMStoreCache(self.ssd_cache, self.memory_size) if self.memory_size > 0 else self.ssd_cache
         elif mode == 'disk':
             # a dataset for disk caching (each machine gets a partition, no ram cache)
@@ -143,13 +143,12 @@ class LazyShardDataset:
 
     def __del__(self):
         shutil.rmtree(self.cache_path)
-        
 
 
 class BiLevelCachedDataset:
     def __init__(self, ds, memory_cache_size=None, disk_cache_size=None, disk_cache_path="./lmdbm.db"):
         self.ds = ds
-        self.ssd_cache = DiskStoreCache(ds, disk_cache_size, disk_cache_path)
+        self.ssd_cache = DiskStoreCache(ds, disk_cache_size, disk_cache_path, memory_cache_size > 0)
         self.memory_cache = RAMStoreCache(self.ssd_cache, memory_cache_size)
 
     def __len__(self):
