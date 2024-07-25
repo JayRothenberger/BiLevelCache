@@ -1,0 +1,10 @@
+LICENSE
+README.md
+pyproject.toml
+src/bicache/__init__.py
+src/bicache/caches.py
+src/bicache/datasets.py
+src/bicache.egg-info/PKG-INFO
+src/bicache.egg-info/SOURCES.txt
+src/bicache.egg-info/dependency_links.txt
+src/bicache.egg-info/top_level.txt
