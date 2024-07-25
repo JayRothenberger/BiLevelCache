@@ -91,7 +91,6 @@ class LazyShardDataset:
         max_shard_size = (1 + overflow) * cache_size
 
         assert min_elements <= max_shard_size, f'number of requested minimum elements does not fit in this cache + overflow allowance (rank {rank})'
-        assert torch.distributed.is_initialized(), 'no process group has been initialized'
 
         if os.environ.get('LOCAL_WORLD_SIZE') is None:
             warnings.warn('Environment variable LOCAL_WORLD_SIZE has not been set.  It is reccommended to run the process group with torchrun or set this variable manually, otherwise the local world size is assumed to be 1.')
