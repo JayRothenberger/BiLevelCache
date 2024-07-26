@@ -54,7 +54,7 @@ class LazyShardDataset:
         'disk': Each node in the training gets its own shard to cache.  Caches only to local disk.  Disk cache space is shared across ranks.  Shuffling across 
             ranks occurs which does not impact disk cache performance.
     """
-    # TODO: automatically create shards that will fill the common cache size (max out the minimum cache size across all ranks)
+
     def __init__(self, ds, shuffle=False, disk_size=0.8, memory_size=0.8, overflow=0.0, min_elements=0, rank=None, num_replicas=None, seed=13, mode='rank', disk_cache_path='./bicache'):
         self.ds = ds
         self.indices = []
@@ -107,8 +107,8 @@ class LazyShardDataset:
         self.disk_inds = sum([inds[first_group_worker + i:len(ds):self.num_replicas][:max_shard_size] for i in range(self.local_world_size)], [])
         self.rank_inds = inds[rank:len(ds):self.num_replicas][:max_shard_size]
 
-        self.disk_ds = IndexSubsetDataset(ds, self.disk_inds)
-        self.rank_ds = IndexSubsetDataset(ds, self.rank_inds)
+        self.disk_ds = IndexSubsetDataset(self.ds, self.disk_inds)
+        self.rank_ds = IndexSubsetDataset(self.ds, self.rank_inds)
 
         assert mode in ['rank', 'node', 'disk']
 
@@ -138,7 +138,19 @@ class LazyShardDataset:
             yield self[i]
         else:
             if self.shuffle:
-                random.shuffle(self.inds)
+                if self.mode == 'rank':
+                    self.seed += 1
+                    random.seed(self.seed)
+                    random.shuffle(self.rank_inds)
+                    self.rank_ds = IndexSubsetDataset(self.ds, self.rank_inds)
+                else:
+                    self.seed += 1
+                    random.seed(self.seed)
+                    random.shuffle(self.disk_ds)
+                    random.shuffle(self.rank_inds)
+                    self.rank_inds = self.disk_inds[self.rank % self.local_world_size:len(self.disk_inds):self.local_world_size]
+                    self.disk_ds = IndexSubsetDataset(self.ds, self.disk_inds)
+                    self.rank_ds = IndexSubsetDataset(self.ds, self.rank_inds)
 
     def __del__(self):
         shutil.rmtree(self.cache_path)
