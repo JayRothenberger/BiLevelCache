@@ -1,5 +1,4 @@
 from bicache.caches import DiskStoreCache, RAMStoreCache
-import torch
 import psutil
 import shutil
 import pickle
@@ -65,7 +64,7 @@ class LazyShardDataset:
             self.disk_size = int(psutil.disk_usage(disk_cache_path).free * disk_size)
         else:
             assert isinstance(disk_size, int), f'disk_size must be either float or int, found: {type(disk_size)}'
-            assert disk_size >= 0, f'disk_size cannot be negative'
+            assert disk_size >= 0, 'disk_size cannot be negative'
             self.disk_size = disk_size
 
         if isinstance(memory_size, float): 
@@ -73,7 +72,7 @@ class LazyShardDataset:
             self.memory_size = int(psutil.virtual_memory().free * memory_size)
         else:
             assert isinstance(memory_size, int), f'memory_size must be either float or int, found: {type(memory_size)}'
-            assert memory_size >= 0, f'memory_size cannot be negative'
+            assert memory_size >= 0, 'memory_size cannot be negative'
             self.memory_size = memory_size
 
         self.overflow=overflow

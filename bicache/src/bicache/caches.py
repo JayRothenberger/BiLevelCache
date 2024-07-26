@@ -1,16 +1,15 @@
 from zarr._storage.store import Store, BaseStore, StoreLike
-from typing import Sequence, Mapping, Optional, Union, List, Tuple, Dict, Any
-from zarr.types import PathLike as Path, DIMENSION_SEPARATOR
+from typing import Dict, Any
+from zarr.types import PathLike as Path
 from collections import OrderedDict
 from zarr.storage import listdir, getsize
-from threading import Lock, RLock
+from threading import Lock
 from lmdbm import Lmdb
 import pickle
 import os
 
 from multiprocessing.managers import BaseManager
-from multiprocessing import Manager, Value
-from collections import OrderedDict
+from multiprocessing import Value
 
 
 def buffer_size(array):
@@ -149,7 +148,6 @@ class DiskStoreCache(Store):
             del self._db[key]
 
     def __getitem__(self, key):
-        # TODO: this is bad, should check membership and then retrieve
         try:
             # first try to obtain the value from the cache
             value = self._db[key]
@@ -163,7 +161,7 @@ class DiskStoreCache(Store):
                 # treat the end as most recently used (it is not promoted)
                 self._keys_cache.move_to_end(key)
 
-        except KeyError as e:
+        except KeyError:
             # cache miss, retrieve value from the store
             value = self._store[key]
 
