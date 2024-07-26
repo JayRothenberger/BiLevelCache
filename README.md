@@ -2,11 +2,10 @@
 
 A two level cache for machine learning model training and parallel distributed data processing.  This project was created to make effective use of RAM and local SSD storage on distributed systems during training models whose data is too large to fit in either, but too slow to constantly fetch from disk.  There are three use cases envisioned for this project:
 
+2. Caching data in memory and on local SSD for fast (re)-access
 1. Lazy sharding of large datasets
 
     By automatically determining disjoint subsets of indices for each worker and worker group, and caching those examples for that worker or worker group a shard can be sent to a node 'lazily' during training.  This is particularly helpful for [Zarr](https://zarr.readthedocs.io/en/stable/)  v2 arrays that do not have sharding support.  However, any integer-indexed structure can be sharded with this library.
-
-2. Caching data in memory and on local SSD for fast (re)-access
 3. Parallel, distributed data processing
 
 
@@ -14,7 +13,9 @@ A two level cache for machine learning model training and parallel distributed d
 - [Installation](#installation)
 - [Usage](#usage)
     + [Caching](#caching-datasets)
+    + [Lazy Sharding](#lazy-sharding)
 - [Features](#features)
+- [Roadmap](#roadmap)
 - [License](#license)
 
 ## Installation 
@@ -32,7 +33,7 @@ Then, install the package in the `bicache` directory with pip
 ```python 
 import torchvision
 from bicache import BiLevelCachedDataset
-# path where the disk cache will be stored
+# a directory on the local ssd
 path = '/local/cache'
 
 # the data we will be caching
@@ -66,8 +67,76 @@ loader = DataLoader(cached_dataset, **loader_kwargs)
 shutil.rmtree(path)
 ```
 
-## Features
-[def]: #features
+### Lazy Sharding
+
+```python
+import torchvision
+from bicache import LazyShardDataset
+
+rank, world_size = int(os.environ['RANK']), int(os.environ['WORLD_SIZE'])
+# a directory on the local ssd
+path = '/local/cache'
+# the data we will be caching
+data = torchvision.datasets.ImageNet('/somewhere/on/distributed/filesystem')
+# Building the object that will handle the caching.  Upon access it will retrieve from the filesystem and cache the example.
+# When the cache would exceed memory_cache_size bytes in RAM the element is evicted to disk.  
+# When both are full, elements become uncached in LRU order.
+cached_dataset = LazyShardDataset(
+                                data,
+                                shuffle=True,
+                                disk_size=0.95, # use at most 95% free disk space
+                                memory_size=0.5, # use at most 50% free RAM
+                                overflow=0.0, # shard will not exceed cache size
+                                min_elements=len(data) // world_size, # shards are at least 
+                                rank=rank,
+                                num_replicas=world_size,
+                                seed=13,
+                                mode='rank', # each rank gets a partition of indices
+                                disk_cache_path='./bicache'
+                                )
+
+# this is an indexed dataset that can be used like any other in pytorch with a dataloader
+loader_kwargs = {'batch_size': 4, 
+                    'num_workers': 8, #  We can even use multiple workers.  The cache is thread-safe.
+                    'pin_memory': True,
+                    'shuffle': True}
+
+loader = DataLoader(cached_dataset, **loader_kwargs)
+
+memory_hits = []
+memory_miss = []
+
+for _ in range(2):
+    for i in loader:
+        memory_miss.append(cached_dataset.memory_cache.misses.value - max(memory_miss + [0]))
+        memory_hits.append(cached_dataset.memory_cache.hits.value - max(memory_hits + [0]))
+
+print(len([cached_dataset.memory_cache._values_cache.get(i) for i in range(8) if cached_dataset.memory_cache._values_cache.get(i) is not None]))
+
+with open('out.txt', 'a') as fp:
+    fp.writelines(f'\n{rank} hit' + str(memory_hits) + '\n')
+    fp.writelines(f'\n{rank} miss' + str(memory_miss))
+
+torch.distributed.barrier()
+
+if rank == 0:
+    shutil.rmtree(path)
+```
+
+## Roadmap
+✅ Caching to a Directory\
+&nbsp;&nbsp;&nbsp;&nbsp;✅ Evaluate database options\
+&nbsp;&nbsp;&nbsp;&nbsp;✅ Manage cache promotions in the case of an existing RAM cache\
+✅ Caching to RAM\
+&nbsp;&nbsp;&nbsp;&nbsp;✅ Thread safe OrderedDict\
+&nbsp;&nbsp;&nbsp;&nbsp;⬜️ ~~Cross-Process OrderedDict Cache~~ (out of scope)\
+&nbsp;&nbsp;&nbsp;&nbsp;✅\
+⬜️ Convenience Objects\
+&nbsp;&nbsp;&nbsp;&nbsp;✅ Lazy Sharding Dataset\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ Automatic cache size discovery\
+&nbsp;&nbsp;&nbsp;&nbsp;⬜️ \
+&nbsp;&nbsp;&nbsp;&nbsp;⬜️ \
+⬜️
 
 ## License
 [def]: #license
