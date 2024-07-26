@@ -144,12 +144,13 @@ shutil.rmtree(path)
 &nbsp;&nbsp;&nbsp;&nbsp;✅ Thread safe hits and misses counters\
 ✅ Convenience Objects\
 &nbsp;&nbsp;&nbsp;&nbsp;✅ Bilevel Cache Dataset\
-&nbsp;&nbsp;&nbsp;&nbsp;✅ Lazy Sharding Dataset\
+&nbsp;&nbsp;&nbsp;&nbsp;⬜️ Lazy Sharding Dataset\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ Automatic cache size discovery\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ Shuffling\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ rank mode caching\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ node mode caching\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ disk mode caching\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⬜️ add option to ensure shards are of similar but automatically determined size.\
 ⬜️ Benchmarking\
 &nbsp;&nbsp;&nbsp;&nbsp;⬜️ Bilevel Cache Dataset hit and miss latency\
 &nbsp;&nbsp;&nbsp;&nbsp;⬜️ Lazy Sharding Dataset hit and miss latency\
