@@ -6,7 +6,7 @@ import torchvision
 import torch.distributed as dist
 from torch.utils.data import DataLoader
 
-from bicache.datasets import BiLevelCachedDataset
+from bicache.datasets import LazyShardDataset
 
 def setup(rank, world_size):
     dist.init_process_group("gloo", rank=rank, world_size=world_size)
@@ -24,11 +24,23 @@ if __name__ == '__main__':
     # Building the object that will handle the caching.  Upon access it will retrieve from the filesystem and cache the example.
     # When the cache would exceed memory_cache_size bytes in RAM the element is evicted to disk.  
     # When both are full, elements become uncached in LRU order.
-    cached_dataset = BiLevelCachedDataset(data, memory_cache_size=100_000_000_000, disk_cache_size=300_000_000_000, disk_cache_path=path)
+    cached_dataset = LazyShardDataset(
+                                      data,
+                                      shuffle=True,
+                                      disk_size=0.95, # use at most 95% free disk space
+                                      memory_size=0.5, # use at most 50% free RAM
+                                      overflow=0.0, # shard will not exceed cache size
+                                      min_elements=len(data) // world_size, # shards are at least 
+                                      rank=rank,
+                                      num_replicas=world_size,
+                                      seed=13,
+                                      mode='rank', # each rank gets a partition of indices
+                                      disk_cache_path='./bicache'
+                                      )
 
     # this is an indexed dataset that can be used like any other in pytorch with a dataloader
     loader_kwargs = {'batch_size': 4, 
-                     'num_workers': 2, #  We can even use multiple workers.  The cache is thread-safe.
+                     'num_workers': 8, #  We can even use multiple workers.  The cache is thread-safe.
                      'pin_memory': True,
                      'shuffle': True}
 
@@ -37,7 +49,7 @@ if __name__ == '__main__':
     memory_hits = []
     memory_miss = []
 
-    for _ in range(4):
+    for _ in range(2):
         for i in loader:
             memory_miss.append(cached_dataset.memory_cache.misses.value - max(memory_miss + [0]))
             memory_hits.append(cached_dataset.memory_cache.hits.value - max(memory_hits + [0]))

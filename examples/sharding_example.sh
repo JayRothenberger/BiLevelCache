@@ -1,0 +1,1 @@
+torchrun --rdzv-backend=c10d --rdzv-endpoint=localhost:0 --standalone --nnodes=2 --nproc-per-node=2 sharding_example.py
