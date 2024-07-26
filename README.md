@@ -31,6 +31,7 @@ Then, install the package in the `bicache` directory with pip
 
 ### Caching Datasets
 ```python 
+import torch
 import torchvision
 from bicache import BiLevelCachedDataset
 # a directory on the local ssd
@@ -70,6 +71,7 @@ shutil.rmtree(path)
 ### Lazy Sharding
 
 ```python
+import torch
 import torchvision
 from bicache import LazyShardDataset
 
@@ -119,8 +121,9 @@ with open('out.txt', 'a') as fp:
 
 torch.distributed.barrier()
 
-if rank == 0:
-    shutil.rmtree(path)
+...
+
+shutil.rmtree(path)
 ```
 
 ## Roadmap
@@ -130,13 +133,22 @@ if rank == 0:
 ✅ Caching to RAM\
 &nbsp;&nbsp;&nbsp;&nbsp;✅ Thread safe OrderedDict\
 &nbsp;&nbsp;&nbsp;&nbsp;⬜️ ~~Cross-Process OrderedDict Cache~~ (out of scope)\
-&nbsp;&nbsp;&nbsp;&nbsp;✅\
-⬜️ Convenience Objects\
+&nbsp;&nbsp;&nbsp;&nbsp;✅ Thread safe hits and misses counters\
+✅ Convenience Objects\
+&nbsp;&nbsp;&nbsp;&nbsp;✅ Bilevel Cache Dataset\
 &nbsp;&nbsp;&nbsp;&nbsp;✅ Lazy Sharding Dataset\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ Automatic cache size discovery\
-&nbsp;&nbsp;&nbsp;&nbsp;⬜️ \
-&nbsp;&nbsp;&nbsp;&nbsp;⬜️ \
-⬜️
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ Shuffling\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ rank mode caching\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ node mode caching\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ disk mode caching\
+⬜️ Benchmarking\
+&nbsp;&nbsp;&nbsp;&nbsp;⬜️ Bilevel Cache Dataset hit and miss latency\
+&nbsp;&nbsp;&nbsp;&nbsp;⬜️ Lazy Sharding Dataset hit and miss latency\
+&nbsp;&nbsp;&nbsp;&nbsp;⬜️ Wall time comparison to uncached data\
+⬜️ Testing\
+&nbsp;&nbsp;&nbsp;&nbsp;⬜️ Write unit tests for the library\
+&nbsp;&nbsp;&nbsp;&nbsp;⬜️ Write integration tests for the library
 
 ## License
 [def]: #license
