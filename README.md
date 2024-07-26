@@ -2,8 +2,8 @@
 
 A two level cache for machine learning model training and parallel distributed data processing.  This project was created to make effective use of RAM and local SSD storage on distributed systems during training models whose data is too large to fit in either, but too slow to constantly fetch from disk.  There are three use cases envisioned for this project:
 
-2. Caching data in memory and on local SSD for fast (re)-access
-1. Lazy sharding of large datasets
+1. Caching data in memory and on local SSD for fast (re)-access
+2. Lazy sharding of large datasets
 
     By automatically determining disjoint subsets of indices for each worker and worker group, and caching those examples for that worker or worker group a shard can be sent to a node 'lazily' during training.  This is particularly helpful for [Zarr](https://zarr.readthedocs.io/en/stable/)  v2 arrays that do not have sharding support.  However, any integer-indexed structure can be sharded with this library.
 3. Parallel, distributed data processing
@@ -41,7 +41,9 @@ path = '/local/cache'
 data = torchvision.datasets.ImageNet('/somewhere/on/distributed/filesystem')
 
 """
-Examples are cached when accessed.  When the cache would exceed memory_cache_size bytes in RAM the element is evicted to disk.  When both are full, elements become uncached in LRU order.
+Examples are cached when accessed.  When the cache would exceed memory_cache_size bytes in 
+RAM the element is evicted to disk.  When both are full, elements become uncached in LRU 
+order.
 
 Cache sizes are in bytes.
 """
@@ -80,9 +82,15 @@ rank, world_size = int(os.environ['RANK']), int(os.environ['WORLD_SIZE'])
 path = '/local/cache'
 # the data we will be caching
 data = torchvision.datasets.ImageNet('/somewhere/on/distributed/filesystem')
-# Building the object that will handle the caching.  Upon access it will retrieve from the filesystem and cache the example.
-# When the cache would exceed memory_cache_size bytes in RAM the element is evicted to disk.  
-# When both are full, elements become uncached in LRU order.
+
+"""
+Examples are cached when accessed.  When the cache would exceed memory_cache_size bytes in 
+RAM the element is evicted to disk.  When both are full, elements become uncached in LRU 
+order.
+
+Cache sizes are in bytes.
+"""
+
 cached_dataset = LazyShardDataset(
                                 data,
                                 shuffle=True,
@@ -99,7 +107,7 @@ cached_dataset = LazyShardDataset(
 
 # this is an indexed dataset that can be used like any other in pytorch with a dataloader
 loader_kwargs = {'batch_size': 4, 
-                    'num_workers': 8, #  We can even use multiple workers.  The cache is thread-safe.
+                    'num_workers': 8, #  We can even use multiple workers.
                     'pin_memory': True,
                     'shuffle': True}
 
