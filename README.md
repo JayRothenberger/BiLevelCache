@@ -97,7 +97,7 @@ cached_dataset = LazyShardDataset(
                                 disk_size=0.95, # use at most 95% free disk space
                                 memory_size=0.5, # use at most 50% free RAM
                                 overflow=0.0, # shard will not exceed cache size
-                                min_elements=len(data) // world_size, # shards are at least 
+                                min_elements=len(data) // world_size, # shards are at least this many elements
                                 rank=rank,
                                 num_replicas=world_size,
                                 seed=13,
@@ -160,7 +160,6 @@ shutil.rmtree(path)
 &nbsp;&nbsp;&nbsp;&nbsp;⬜️ Write integration tests for the library
 
 ## License
-[def]: #license
 Copyright 2024 Jay Rothenberger (jay.c.rothenberger@gmail.com)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
