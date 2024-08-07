@@ -33,7 +33,7 @@ Then, install the package in the `bicache` directory with pip
 ```python 
 import torch
 import torchvision
-from bicache import BiLevelCachedDataset
+from bicache.datasets import BiLevelCachedDataset
 # a directory on the local ssd
 path = '/local/cache'
 
@@ -75,7 +75,7 @@ shutil.rmtree(path)
 ```python
 import torch
 import torchvision
-from bicache import LazyShardDataset
+from bicache.datasets import LazyShardDataset
 
 rank, world_size = int(os.environ['RANK']), int(os.environ['WORLD_SIZE'])
 # a directory on the local ssd
